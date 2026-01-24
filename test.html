@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Razorpay Payment Test - Gipza v2</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 600px;
+        margin: 50px auto;
+        padding: 20px;
+      }
+      .input-group {
+        margin-bottom: 15px;
+      }
+      label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      input {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+      button {
+        background-color: #4CAF50;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        width: 100%;
+      }
+      button:hover {
+        background-color: #45a049;
+      }
+      .info {
+        background-color: #f0f0f0;
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 20px;
+        font-size: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Razorpay Payment Test</h1>
+    
+    <div class="input-group">
+      <label for="token">Access Token:</label>
+      <input type="text" id="token" placeholder="Paste your access token here" />
+    </div>
+    
+    <div class="input-group">
+      <label for="orderId">User Order ID:</label>
+      <input type="text" id="orderId" placeholder="e.g., ODR20241229AB0001" />
+    </div>
+    
+    <div class="input-group">
+      <label for="razorpayKey">Razorpay Key ID:</label>
+      <input type="text" id="razorpayKey" placeholder="rzp_test_..." value="rzp_test_s6YjaEdY4g1FMc" />
+    </div>
+    
+    <button id="payBtn">Pay Now</button>
+    
+    <div class="info">
+      <strong>Instructions:</strong><br>
+      1. Get access token from /api/v1/auth/verify-otp<br>
+      2. Create an order using /api/v1/orders (with method: "prepaid")<br>
+      3. Copy the user_order_id from order response<br>
+      4. Fill in the fields above and click "Pay Now"
+    </div>
+
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script>
+      document.getElementById("payBtn").onclick = function () {
+        const token = document.getElementById("token").value.trim();
+        const userOrderId = document.getElementById("orderId").value.trim();
+        const razorpayKey = document.getElementById("razorpayKey").value.trim();
+
+        if (!token) {
+          alert("Please enter your access token.");
+          return;
+        }
+
+        if (!userOrderId) {
+          alert("Please enter the user order ID.");
+          return;
+        }
+
+        if (!razorpayKey) {
+          alert("Please enter your Razorpay Key ID.");
+          return;
+        }
+
+        // Step 1: Initiate payment
+        console.log("Step 1: Initiating payment for order:", userOrderId);
+        fetch("http://localhost:5005/api/v1/orders/initiate-payment", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ user_order_id: userOrderId }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            console.log("Backend response:", data);
+
+            if (!data.success) {
+              alert("Error: " + (data.message || "Failed to initiate payment"));
+              return;
+            }
+
+            // Extract data from response (new backend format)
+            const razorpayOrderId = data.data?.razorpayOrderId;
+            const amount = data.data?.amount;
+            const currency = data.data?.currency || "INR";
+
+            console.log("Amount:", amount, "Currency:", currency, "Razorpay Order ID:", razorpayOrderId);
+
+            if (!razorpayOrderId || !amount || amount <= 0) {
+              alert("Error: Invalid payment details received.");
+              return;
+            }
+
+            const amountInPaise = Math.round(amount * 100);
+            console.log("Amount in Paise:", amountInPaise);
+
+            // Step 2: Open Razorpay checkout
+            var options = {
+              key: razorpayKey,
+              amount: amountInPaise,
+              currency: currency,
+              order_id: razorpayOrderId,
+              name: "Gipza",
+              description: "Order Payment",
+              handler: function (response) {
+                console.log("Payment successful!");
+                console.log("Payment ID:", response.razorpay_payment_id);
+                console.log("Order ID:", response.razorpay_order_id);
+                console.log("Signature:", response.razorpay_signature);
+
+                // Step 3: Confirm payment with backend
+                fetch("http://localhost:5005/api/v1/orders/confirm-payment", {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                  },
+                  body: JSON.stringify({
+                    order_id: response.razorpay_order_id,
+                    payment_id: response.razorpay_payment_id,
+                    signature: response.razorpay_signature,
+                  }),
+                })
+                  .then((res) => res.json())
+                  .then((data) => {
+                    console.log("Payment verification response:", data);
+                    if (data.success && data.message === "Payment confirmed successfully") {
+                      alert("✅ Payment successful! Your order is confirmed.\n\nOrder ID: " + data.data.user_order_id);
+                    } else {
+                      alert("❌ Payment verification failed: " + (data.message || "Unknown error"));
+                    }
+                  })
+                  .catch((err) => {
+                    console.error("Error verifying payment:", err);
+                    alert("Error verifying payment. Check console for details.");
+                  });
+              },
+              prefill: {
+                name: "Test User",
+                email: "test@example.com",
+                contact: "9876543210",
+              },
+              theme: {
+                color: "#F37254",
+              },
+              modal: {
+                ondismiss: function() {
+                  console.log("Payment modal closed");
+                }
+              }
+            };
+
+            var rzp1 = new Razorpay(options);
+            
+            // Handle payment failure
+            rzp1.on('payment.failed', function (response) {
+              console.error('Payment failed:', response.error);
+              alert('❌ Payment failed: ' + (response.error.description || response.error.reason || "Unknown error"));
+            });
+            
+            rzp1.open();
+          })
+          .catch((err) => {
+            console.error("Error initiating payment:", err);
+            alert("Error initiating payment. Check console for details.");
+          });
+      };
+    </script>
+  </body>
+</html>
