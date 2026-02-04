@@ -4795,6 +4795,635 @@
 			"description": "Vendor management endpoints - public vendor listing, admin vendor CRUD and warehouse registration"
 		},
 		{
+			"name": "Banners",
+			"item": [
+				{
+					"name": "Get All Banners",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has banners\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/banners?active=&type=&sort=sortOrder",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"banners"
+							],
+							"query": [
+								{
+									"key": "active",
+									"value": "",
+									"description": "Filter by active: 'true' or 'false' (optional)"
+								},
+								{
+									"key": "type",
+									"value": "",
+									"description": "Filter by type: 'banner' or 'ai-cta' (optional)"
+								},
+								{
+									"key": "sort",
+									"value": "sortOrder",
+									"description": "Sort field, prefix with - for descending (optional)"
+								}
+							]
+						},
+						"description": "List all banners. Public. Optional query: active (true/false), type (banner/ai-cta), sort."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Banner by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has banner\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('_id');",
+									"    pm.expect(jsonData.data).to.have.property('image');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/banners/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"banners",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "banner_id_here",
+									"description": "Banner MongoDB ObjectId"
+								}
+							]
+						},
+						"description": "Get a single banner by ID. Public."
+					},
+					"response": []
+				}
+			],
+			"description": "Public banner endpoints. List and get banners (optional filters: active, type, sort)."
+		},
+		{
+			"name": "Tickets",
+			"item": [
+				{
+					"name": "Create Ticket",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"subject\": \"Order not delivered\",\n    \"description\": \"Order #123 was not delivered on time. Please look into it.\",\n    \"category\": \"delivery\",\n    \"priority\": \"high\",\n    \"imageUrl\": \"\",\n    \"orderId\": \"\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": { "raw": "{{baseUrl}}/api/v1/tickets", "host": ["{{baseUrl}}"], "path": ["api", "v1", "tickets"] },
+						"description": "Create a support ticket. Body: subject (required), description (required), category (required), priority (optional: low | medium | high, default medium), imageUrl (optional URL), orderId (optional MongoDB ObjectId of linked order). Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Tickets",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tickets/user?status=&category=&hasOrder=",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tickets", "user"],
+							"query": [
+								{ "key": "status", "value": "", "description": "Filter: open | in-progress | resolved | closed" },
+								{ "key": "category", "value": "", "description": "Filter by category (substring match)" },
+								{ "key": "hasOrder", "value": "", "description": "Filter: true | false (tickets with/without linked order)" }
+							]
+						},
+						"description": "Get current user's tickets. Query: status (optional), category (optional), hasOrder (optional: true | false). Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Ticket by ID",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tickets/:id",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tickets", ":id"],
+							"variable": [{ "key": "id", "value": "ticket_id_here", "description": "Ticket MongoDB ObjectId" }]
+						},
+						"description": "Get ticket details by ID. Allowed for ticket owner or admin/manager. Path: id (ticket ObjectId). Requires authentication."
+					},
+					"response": []
+				},
+				{
+					"name": "Add Comment",
+					"request": {
+						"auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }] },
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"text\": \"Please check the tracking details.\",\n    \"imageUrl\": \"\"\n}",
+							"options": { "raw": { "language": "json" } }
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/tickets/:id/comment",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "tickets", ":id", "comment"],
+							"variable": [{ "key": "id", "value": "ticket_id_here", "description": "Ticket MongoDB ObjectId" }]
+						},
+						"description": "Add a comment to a ticket. Body: text (required), imageUrl (optional URL). Allowed for ticket owner or admin/manager. Path: id (ticket ObjectId). Requires authentication."
+					},
+					"response": []
+				}
+			],
+			"description": "User ticket/support endpoints. Create ticket, list my tickets, get ticket by ID, add comment. All require authentication. Admin ticket management is under Admin > Tickets."
+		},
+		{
+			"name": "Occasion Sections",
+			"item": [
+				{
+					"name": "Get All Occasion Sections",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has occasion sections\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/occ-sections?active=",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"occ-sections"
+							],
+							"query": [
+								{
+									"key": "active",
+									"value": "",
+									"description": "Filter by active status: 'true' or 'false' (optional)"
+								}
+							]
+						},
+						"description": "Get all occasion sections with optional active filter. Requires authentication and admin/manager role."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Occasion Section by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has occasion section\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('_id');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/occ-sections/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"occ-sections",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "occ_section_id_here",
+									"description": "Occasion Section ID"
+								}
+							]
+						},
+						"description": "Get a specific occasion section by its ID. Requires authentication and admin/manager role."
+					},
+					"response": []
+				},
+				{
+					"name": "Create Occasion Section",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has created occasion section\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('name');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Birthday\",\n    \"description\": \"Birthday occasion section\",\n    \"image\": \"https://your-bucket.s3.region.amazonaws.com/images/1234567890-file.jpg\",\n    \"image_key\": \"images/1234567890-file.jpg\",\n    \"isActive\": true,\n    \"order\": 1\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/occ-sections",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"occ-sections"
+							]
+						},
+						"description": "Create occasion section. First upload image via POST /upload/image to get { url, key }, then send JSON with name, description?, image?, image_key?, isActive?, order?. Name must be unique. Requires authentication and admin/manager role."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Occasion Section",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has updated occasion section\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('_id');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Birthday\",\n    \"description\": \"Updated description\",\n    \"isActive\": true,\n    \"order\": 2\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/occ-sections/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"occ-sections",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "occ_section_id_here",
+									"description": "Occasion Section ID"
+								}
+							]
+						},
+						"description": "Update occasion section. Send JSON: name?, description?, image?, image_key?, isActive?, order?. Use image + image_key (from POST /upload/image) to replace image. At least one field required. Requires authentication and admin/manager role."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Occasion Section",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has success message\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.message).to.include('deleted');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/occ-sections/:id",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"occ-sections",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": "occ_section_id_here",
+									"description": "Occasion Section ID"
+								}
+							]
+						},
+						"description": "Delete an occasion section by its ID. Requires authentication and admin/manager role."
+					},
+					"response": []
+				}
+			],
+			"description": "Occasion section management endpoints for creating and managing occasion sections (e.g., Birthday, Anniversary, etc.). All routes require authentication and admin/manager role."
+		},
+		{
+			"name": "Upload",
+			"item": [
+				{
+					"name": "Upload Image",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has upload data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property(\"url\");",
+									"    pm.expect(jsonData.data).to.have.property(\"key\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": [],
+									"description": "Image file (JPEG, PNG, etc.). Max 10MB."
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/upload/image",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"upload",
+								"image"
+							]
+						},
+						"description": "Upload a single image to S3. Use multipart/form-data with field name 'image'. Max size 10MB. Returns url, key, etag. Requires authentication and admin/manager role."
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Video",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has upload data\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property(\"url\");",
+									"    pm.expect(jsonData.data).to.have.property(\"key\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{accessToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "video",
+									"type": "file",
+									"src": [],
+									"description": "Video file (MP4, etc.). Max 100MB."
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/upload/video",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"upload",
+								"video"
+							]
+						},
+						"description": "Upload a single video to S3. Use multipart/form-data with field name 'video'. Max size 100MB. Returns url, key, etag. Requires authentication and admin/manager role."
+					},
+					"response": []
+				}
+			],
+			"description": "Upload images and videos to S3. All routes require authentication and admin/manager role. Use multipart/form-data: field 'image' for image (max 10MB), field 'video' for video (max 100MB)."
+		},
+		{
 			"name": "Admin",
 			"item": [
 				{
@@ -8769,9 +9398,763 @@
 						"response": []
 					}
 				]
+			},
+			{
+				"name": "Banners",
+				"item": [
+					{
+						"name": "Get All Banners",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 200\", function () {",
+										"    pm.response.to.have.status(200);",
+										"});",
+										"",
+										"pm.test(\"Response has banners\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.data).to.be.an('array');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [
+									{
+										"key": "token",
+										"value": "{{accessToken}}",
+										"type": "string"
+									}
+								]
+							},
+							"method": "GET",
+							"header": [],
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/banners?active=&type=&sort=sortOrder",
+								"host": [
+									"{{baseUrl}}"
+								],
+								"path": [
+									"api",
+									"v1",
+									"admin",
+									"banners"
+								],
+								"query": [
+									{
+										"key": "active",
+										"value": "",
+										"description": "Filter: 'true' or 'false' (optional)"
+									},
+									{
+										"key": "type",
+										"value": "",
+										"description": "Filter: 'banner' or 'ai-cta' (optional)"
+									},
+									{
+										"key": "sort",
+										"value": "sortOrder",
+										"description": "Sort field (optional)"
+									}
+								]
+							},
+							"description": "List all banners (admin). Optional: active, type, sort. Requires authentication and admin/manager role."
+						},
+						"response": []
+					},
+					{
+						"name": "Get Banner by ID",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 200\", function () {",
+										"    pm.response.to.have.status(200);",
+										"});",
+										"",
+										"pm.test(\"Response has banner\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.data).to.have.property('_id');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [
+									{
+										"key": "token",
+										"value": "{{accessToken}}",
+										"type": "string"
+									}
+								]
+							},
+							"method": "GET",
+							"header": [],
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/banners/:id",
+								"host": [
+									"{{baseUrl}}"
+								],
+								"path": [
+									"api",
+									"v1",
+									"admin",
+									"banners",
+									":id"
+								],
+								"variable": [
+									{
+										"key": "id",
+										"value": "banner_id_here",
+										"description": "Banner MongoDB ObjectId"
+									}
+								]
+							},
+							"description": "Get banner by ID. Requires authentication and admin/manager role."
+						},
+						"response": []
+					},
+					{
+						"name": "Create Banner",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 201\", function () {",
+										"    pm.response.to.have.status(201);",
+										"});",
+										"",
+										"pm.test(\"Response has created banner\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.data).to.have.property('image');",
+										"    pm.expect(jsonData.data).to.have.property('name');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [
+									{
+										"key": "token",
+										"value": "{{accessToken}}",
+										"type": "string"
+									}
+								]
+							},
+							"method": "POST",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": {
+								"mode": "raw",
+								"raw": "{\n    \"name\": \"Summer Sale Banner\",\n    \"type\": \"banner\",\n    \"active\": true,\n    \"sortOrder\": 0,\n    \"image\": \"https://your-bucket.s3.region.amazonaws.com/images/1234567890-file.jpg\",\n    \"image_key\": \"images/1234567890-file.jpg\"\n}",
+								"options": {
+									"raw": {
+										"language": "json"
+									}
+								}
+							},
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/banners",
+								"host": [
+									"{{baseUrl}}"
+								],
+								"path": [
+									"api",
+									"v1",
+									"admin",
+									"banners"
+								]
+							},
+							"description": "Create a banner. First upload image via POST /upload/image to get { url, key }, then send JSON with name, type, image, image_key, active?, sortOrder?. Requires authentication and admin/manager role."
+						},
+						"response": []
+					},
+					{
+						"name": "Update Banner",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 200\", function () {",
+										"    pm.response.to.have.status(200);",
+										"});",
+										"",
+										"pm.test(\"Response has updated banner\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.data).to.have.property('_id');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [
+									{
+										"key": "token",
+										"value": "{{accessToken}}",
+										"type": "string"
+									}
+								]
+							},
+							"method": "PUT",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": {
+								"mode": "raw",
+								"raw": "{\n    \"name\": \"Updated Banner Name\",\n    \"type\": \"banner\",\n    \"active\": true,\n    \"sortOrder\": 0\n}",
+								"options": {
+									"raw": {
+										"language": "json"
+									}
+								}
+							},
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/banners/:id",
+								"host": [
+									"{{baseUrl}}"
+								],
+								"path": [
+									"api",
+									"v1",
+									"admin",
+									"banners",
+									":id"
+								],
+								"variable": [
+									{
+										"key": "id",
+										"value": "banner_id_here",
+										"description": "Banner MongoDB ObjectId"
+									}
+								]
+							},
+							"description": "Update banner. Send JSON: name?, type?, active?, sortOrder?, or image + image_key (from POST /upload/image) to replace image. Old image deleted from S3 when replacing. Requires authentication and admin/manager role."
+						},
+						"response": []
+					},
+					{
+						"name": "Delete Banner",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 200\", function () {",
+										"    pm.response.to.have.status(200);",
+										"});",
+										"",
+										"pm.test(\"Response has message\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.message).to.include('deleted');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [
+									{
+										"key": "token",
+										"value": "{{accessToken}}",
+										"type": "string"
+									}
+								]
+							},
+							"method": "DELETE",
+							"header": [],
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/banners/:id",
+								"host": [
+									"{{baseUrl}}"
+								],
+								"path": [
+									"api",
+									"v1",
+									"admin",
+									"banners",
+									":id"
+								],
+								"variable": [
+									{
+										"key": "id",
+										"value": "banner_id_here",
+										"description": "Banner MongoDB ObjectId"
+									}
+								]
+							},
+							"description": "Delete banner and remove image from S3. Requires authentication and admin/manager role."
+						},
+						"response": []
+					}
+				]
+			},
+			{
+				"name": "Tickets",
+				"item": [
+					{
+						"name": "Get All Tickets",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 200\", function () {",
+										"    pm.response.to.have.status(200);",
+										"});",
+										"",
+										"pm.test(\"Response has tickets\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.data).to.be.an('array');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [
+									{
+										"key": "token",
+										"value": "{{accessToken}}",
+										"type": "string"
+									}
+								]
+							},
+							"method": "GET",
+							"header": [],
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/tickets?status=&category=&priority=&hasOrder=",
+								"host": ["{{baseUrl}}"],
+								"path": ["api", "v1", "admin", "tickets"],
+								"query": [
+									{ "key": "status", "value": "", "description": "Filter: open | in-progress | resolved | closed" },
+									{ "key": "category", "value": "", "description": "Filter by category (substring match)" },
+									{ "key": "priority", "value": "", "description": "Filter: low | medium | high" },
+									{ "key": "hasOrder", "value": "", "description": "Filter: true | false (tickets with/without linked order)" }
+								]
+							},
+							"description": "List all support tickets. Query: status (optional), category (optional), priority (optional), hasOrder (optional: true | false). Requires authentication and admin/manager role."
+						},
+						"response": []
+					},
+					{
+						"name": "Update Ticket Status",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 200\", function () {",
+										"    pm.response.to.have.status(200);",
+										"});",
+										"",
+										"pm.test(\"Response has updated ticket\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.data).to.have.property('status');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [
+									{
+										"key": "token",
+										"value": "{{accessToken}}",
+										"type": "string"
+									}
+								]
+							},
+							"method": "PUT",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": {
+								"mode": "raw",
+								"raw": "{\n    \"status\": \"in-progress\"\n}",
+								"options": {
+									"raw": {
+										"language": "json"
+									}
+								}
+							},
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/tickets/:id/status",
+								"host": ["{{baseUrl}}"],
+								"path": ["api", "v1", "admin", "tickets", ":id", "status"],
+								"variable": [
+									{
+										"key": "id",
+										"value": "ticket_id_here",
+										"description": "Ticket MongoDB ObjectId"
+									}
+								]
+							},
+							"description": "Update ticket status. Body: status (required) — one of: open | in-progress | resolved | closed. Path: id (ticket ObjectId). Requires authentication and admin/manager role."
+						},
+						"response": []
+					},
+					{
+						"name": "Assign Ticket",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 200\", function () {",
+										"    pm.response.to.have.status(200);",
+										"});",
+										"",
+										"pm.test(\"Response has assigned ticket\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.data).to.have.property('assignedTo');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [
+									{
+										"key": "token",
+										"value": "{{accessToken}}",
+										"type": "string"
+									}
+								]
+							},
+							"method": "PUT",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"body": {
+								"mode": "raw",
+								"raw": "{\n    \"assignedTo\": \"admin_or_manager_user_id_here\"\n}",
+								"options": {
+									"raw": {
+										"language": "json"
+									}
+								}
+							},
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/tickets/:id/assign",
+								"host": ["{{baseUrl}}"],
+								"path": ["api", "v1", "admin", "tickets", ":id", "assign"],
+								"variable": [
+									{
+										"key": "id",
+										"value": "ticket_id_here",
+										"description": "Ticket MongoDB ObjectId"
+									}
+								]
+							},
+							"description": "Assign ticket to an admin or manager user. Body: assignedTo (required) — MongoDB ObjectId of a user with role admin or manager. Path: id (ticket ObjectId). Sets ticket status to in-progress. Requires authentication and admin/manager role."
+						},
+						"response": []
+					}
+				],
+				"description": "Admin ticket/support management. List all tickets, update status, assign to admin/manager. All require authentication and admin/manager role."
+			},
+			{
+				"name": "Lists",
+				"item": [
+					{
+						"name": "Get All Lists",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 200\", function () {",
+										"    pm.response.to.have.status(200);",
+										"});",
+										"",
+										"pm.test(\"Response has lists\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.data).to.be.an('array');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+							},
+							"method": "GET",
+							"header": [],
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/lists/get-list?type=",
+								"host": ["{{baseUrl}}"],
+								"path": ["api", "v1", "admin", "lists", "get-list"],
+								"query": [
+									{ "key": "type", "value": "", "description": "Filter: vendor, pincode, category, tag, productTag, size, color, occasion, theme_banner, theme_tabs, theme_sections, theme_pincode" }
+								]
+							},
+							"description": "Get all lists with optional type filter. Requires authentication and admin/manager role."
+						},
+						"response": []
+					},
+					{
+						"name": "Save List",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 201\", function () {",
+										"    pm.response.to.have.status(201);",
+										"});",
+										"",
+										"pm.test(\"Response has saved list\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.data).to.have.property('name');",
+										"    pm.expect(jsonData.data).to.have.property('type');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+							},
+							"method": "POST",
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": {
+								"mode": "raw",
+								"raw": "{\n    \"name\": \"Vendor List 1\",\n    \"description\": \"List of preferred vendors\",\n    \"type\": \"vendor\",\n    \"content\": [\"vendor_id_1\", \"vendor_id_2\", \"vendor_id_3\"]\n}",
+								"options": { "raw": { "language": "json" } }
+							},
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/lists/list-store",
+								"host": ["{{baseUrl}}"],
+								"path": ["api", "v1", "admin", "lists", "list-store"]
+							},
+							"description": "Save a new list. Body: name (required), description (optional), type (required), content (required, array or object). Type must be one of: vendor, pincode, category, tag, productTag, size, color, occasion, theme_banner, theme_tabs, theme_sections, theme_pincode. Requires authentication and admin/manager role."
+						},
+						"response": []
+					},
+					{
+						"name": "Get List by ID",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 200\", function () {",
+										"    pm.response.to.have.status(200);",
+										"});",
+										"",
+										"pm.test(\"Response has list data\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.data).to.have.property('_id');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+							},
+							"method": "GET",
+							"header": [],
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/lists/:id",
+								"host": ["{{baseUrl}}"],
+								"path": ["api", "v1", "admin", "lists", ":id"],
+								"variable": [{ "key": "id", "value": "list_id_here", "description": "List MongoDB ObjectId" }]
+							},
+							"description": "Get a list by ID. Requires authentication and admin/manager role."
+						},
+						"response": []
+					},
+					{
+						"name": "Update List",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 200\", function () {",
+										"    pm.response.to.have.status(200);",
+										"});",
+										"",
+										"pm.test(\"Response has updated list\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.data).to.have.property('_id');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+							},
+							"method": "PUT",
+							"header": [{ "key": "Content-Type", "value": "application/json" }],
+							"body": {
+								"mode": "raw",
+								"raw": "{\n    \"name\": \"Updated Vendor List\",\n    \"description\": \"Updated description\",\n    \"content\": [\"vendor_id_1\", \"vendor_id_2\", \"vendor_id_3\", \"vendor_id_4\"]\n}",
+								"options": { "raw": { "language": "json" } }
+							},
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/lists/:id",
+								"host": ["{{baseUrl}}"],
+								"path": ["api", "v1", "admin", "lists", ":id"],
+								"variable": [{ "key": "id", "value": "list_id_here", "description": "List MongoDB ObjectId" }]
+							},
+							"description": "Update a list. Body: name (optional), description (optional), content (optional). At least one field required. Requires authentication and admin/manager role."
+						},
+						"response": []
+					},
+					{
+						"name": "Delete List",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 200\", function () {",
+										"    pm.response.to.have.status(200);",
+										"});",
+										"",
+										"pm.test(\"Response has success message\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.message).to.include('deleted');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+							},
+							"method": "DELETE",
+							"header": [],
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/lists/:id",
+								"host": ["{{baseUrl}}"],
+								"path": ["api", "v1", "admin", "lists", ":id"],
+								"variable": [{ "key": "id", "value": "list_id_here", "description": "List MongoDB ObjectId" }]
+							},
+							"description": "Delete a list by ID. Requires authentication and admin/manager role."
+						},
+						"response": []
+					},
+					{
+						"name": "Delete List (Alternative Route)",
+						"event": [
+							{
+								"listen": "test",
+								"script": {
+									"exec": [
+										"pm.test(\"Status code is 200\", function () {",
+										"    pm.response.to.have.status(200);",
+										"});",
+										"",
+										"pm.test(\"Response has success message\", function () {",
+										"    var jsonData = pm.response.json();",
+										"    pm.expect(jsonData.success).to.be.true;",
+										"    pm.expect(jsonData.message).to.include('deleted');",
+										"});"
+									],
+									"type": "text/javascript"
+								}
+							}
+						],
+						"request": {
+							"auth": {
+								"type": "bearer",
+								"bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+							},
+							"method": "DELETE",
+							"header": [],
+							"url": {
+								"raw": "{{baseUrl}}/api/v1/admin/lists/delete-list/:id",
+								"host": ["{{baseUrl}}"],
+								"path": ["api", "v1", "admin", "lists", "delete-list", ":id"],
+								"variable": [{ "key": "id", "value": "list_id_here", "description": "List MongoDB ObjectId" }]
+							},
+							"description": "Delete a list by ID (alternative path). Requires authentication and admin/manager role."
+						},
+						"response": []
+					}
+				],
+				"description": "List management (admin only). Get all lists, save list, get by ID, update, delete. Types: vendor, pincode, category, tag, productTag, size, color, occasion, theme_banner, theme_tabs, theme_sections, theme_pincode. All require authentication and admin/manager role."
 			}
 		],
-		"description": "Admin management endpoints - dashboard statistics, analytics, user management, order management, product management, vendor management, category management, color management, coupon management, and analytics & reports. All routes require authentication and admin/manager role."
+		"description": "Admin management endpoints - dashboard statistics, analytics, user management, order management, product management, vendor management, category management, color management, coupon management, analytics & reports, banner management, ticket management, and list management. All routes require authentication and admin/manager role."
 	}
 	],
 	"event": [

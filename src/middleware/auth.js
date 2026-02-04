@@ -71,7 +71,6 @@ const authorize = (...roles) => {
       });
     }
 
-    // Flatten roles array in case an array was passed (e.g., authorize(['admin', 'manager']))
     const allowedRoles = roles.flat();
 
     if (!allowedRoles.includes(req.user.role)) {

@@ -38,6 +38,10 @@ const colorRoutes = require('./routes/colorRoutes');
 const productRoutes = require('./routes/productRoutes');
 const orderRoutes = require('./routes/orderRoutes');
 const vendorRoutes = require('./routes/vendorRoutes');
+const bannerRoutes = require('./routes/bannerRoutes');
+const occSectionRoutes = require('./routes/occSectionRoutes');
+const uploadRoutes = require('./routes/uploadRoutes');
+const ticketRoutes = require('./routes/ticketRoutes');
 const adminRoutes = require('./routes/admin');
 
 app.use('/api/v1/health', healthRoutes);
@@ -48,6 +52,10 @@ app.use('/api/v1/colors', colorRoutes);
 app.use('/api/v1/products', productRoutes);
 app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/vendors', vendorRoutes);
+app.use('/api/v1/banners', bannerRoutes);
+app.use('/api/v1/occ-sections', occSectionRoutes);
+app.use('/api/v1/upload', uploadRoutes);
+app.use('/api/v1/tickets', ticketRoutes);
 app.use('/api/v1/admin', adminRoutes);
 
 

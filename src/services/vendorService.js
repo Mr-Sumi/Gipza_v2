@@ -257,7 +257,7 @@ const getVendorLists = async (options = {}) => {
     }
     query.type = type;
   }
-
+  console.log(query);
   const lists = await ListStore.find(query)
     .sort({ updatedAt: -1 })
     .limit(100)

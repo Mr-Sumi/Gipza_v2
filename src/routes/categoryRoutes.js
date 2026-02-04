@@ -7,7 +7,7 @@ const {
   getCategoryValidation,
 } = require('../validations/category.validation');
 
-// Public routes
+
 router.get('/', validate(getCategoriesValidation), categoryControllers.getCategories);
 router.get('/:id', validate(getCategoryValidation), categoryControllers.getCategory);
 

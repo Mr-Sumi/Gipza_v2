@@ -11,6 +11,10 @@ const bannerSchema = new mongoose.Schema(
       type: String,
       required: [true, "Banner image is required"],
     },
+    /** S3 object key; used to delete from S3 on update/delete */
+    image_key: {
+      type: String,
+    },
     cloudinary_id: {
       type: String,
     },
@@ -23,11 +27,11 @@ const bannerSchema = new mongoose.Schema(
     active: {
       type: Boolean,
       default: true,
-    }
+    },
   },
   { timestamps: true }
 );
 
 const Banner = mongoose.model("Banner", bannerSchema);
 
-module.exports = Banner; 
+module.exports = Banner;

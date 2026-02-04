@@ -776,10 +776,9 @@ const seedDatabase = async () => {
   try {
     console.log('🌱 Starting database seeding...\n');
 
-    // Connect to database
+  
     await connectDB();
 
-    // Seed in order: Categories -> Colors -> Vendors -> Products
     await seedCategories();
     await seedColors();
     const vendors = await seedVendors();
@@ -790,7 +789,6 @@ const seedDatabase = async () => {
     console.log(`   - Products created: ${products.length}`);
     console.log(`   - Total products in database: ${await Product.countDocuments()}`);
 
-    // Close database connection
     await mongoose.connection.close();
     console.log('\n👋 Database connection closed');
     process.exit(0);
@@ -801,7 +799,6 @@ const seedDatabase = async () => {
   }
 };
 
-// Run seeder if called directly
 if (require.main === module) {
   seedDatabase();
 }
